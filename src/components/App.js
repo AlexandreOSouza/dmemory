@@ -4,15 +4,67 @@ import './App.css';
 import MemoryToken from '../abis/MemoryToken.json'
 import brain from '../brain.png'
 
+const CARD_ARRAY = [
+  {
+    name: 'fries',
+    img: '/images/fries.png'
+  },
+  {
+    name: 'cheeseburger',
+    img: '/images/cheeseburger.png'
+  },
+  {
+    name: 'ice-cream',
+    img: '/images/ice-cream.png'
+  },
+  {
+    name: 'pizza',
+    img: '/images/pizza.png'
+  },
+  {
+    name: 'milkshake',
+    img: '/images/milkshake.png'
+  },
+  {
+    name: 'hotdog',
+    img: '/images/hotdog.png'
+  },
+  {
+    name: 'fries',
+    img: '/images/fries.png'
+  },
+  {
+    name: 'cheeseburger',
+    img: '/images/cheeseburger.png'
+  },
+  {
+    name: 'ice-cream',
+    img: '/images/ice-cream.png'
+  },
+  {
+    name: 'pizza',
+    img: '/images/pizza.png'
+  },
+  {
+    name: 'milkshake',
+    img: '/images/milkshake.png'
+  },
+  {
+    name: 'hotdog',
+    img: '/images/hotdog.png'
+  }
+]
+
 const App = () => {
 
   const [account, setAccount] = useState('0x0')
   const [contract, setContract] = useState()
   const [totalSupply, setTotalSupply] = useState(0)
   const [tokensURIs, setTokensURIs] = useState([])
-  const [cardArray, setCardArray] = useState([])
+  const [cardsChosenId, setCardsChosenId] = useState([])
   const [cardsChosen, setCardsChosen] = useState([])
   const [cardsWon, setCardsWon] = useState([])
+  const [cardArray, setCardArray] = useState(CARD_ARRAY.sort(() => 0.5 - Math.random()))
 
   const loadWeb3 = async () => {
     if (window.ethereum) {
@@ -61,6 +113,66 @@ const App = () => {
     loadBlockchainData()
   }, [])
 
+  const chooseImage = (cardId) => {
+    cardId = cardId.toString()
+    if(cardsWon.includes(cardId)) {
+      return window.location.origin + '/images/white.png'
+    }
+    else if(cardsChosenId.includes(cardId)) {
+      return CARD_ARRAY[cardId].img
+    } else {
+      return window.location.origin + '/images/blank.png'
+    }
+  }
+
+  const flipCard = async (cardId) => {
+    const alreadyChosen = cardsChosen.length
+
+    console.log('flip')
+    console.log(cardsChosenId)
+
+
+    setCardsChosen(cardsChosen => [...cardsChosen, cardArray[cardId].name])
+    setCardsChosenId(cardsChosenId => [...cardsChosenId, cardId])
+
+    if (alreadyChosen === 1) {
+      setTimeout(checkForMatch, 1000)
+    }
+  }
+
+  const checkForMatch = async () => {
+
+    const optionOneId = cardsChosenId[0]
+    const optionTwoId = cardsChosenId[1]
+
+
+    console.log(cardsChosen)
+    console.log(cardsChosenId)
+
+    if (optionOneId == optionTwoId) {
+      alert('You have clicked the same card!')
+    } else if (cardsChosen[0] == cardsChosen[1]) {
+      alert('You have found a match!')
+      contract.mint(
+        account,
+        window.location.origin + CARD_ARRAY[optionOneId].img.toString()
+      )
+      .send({ from: account })
+      .on('transactionHash', (hash) => {
+        setCardsWon(cardsWon => [...cardsWon, optionOneId, optionTwoId])
+        setTokensURIs(tokensURIs => [...tokensURIs, CARD_ARRAY[optionOneId].img])
+      })
+    } else {
+      alert('Sorry, try again!')
+    }
+    setCardsChosen([])
+    setCardsChosenId([])
+
+    if (cardsWon.length === CARD_ARRAY.length) {
+      alert('You have won the game!')
+    }
+  }
+
   return (
     <div>
       <nav className="navbar navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
@@ -83,7 +195,7 @@ const App = () => {
         <div className="row">
           <main role="main" className="col-lg-12 d-flex text-center">
             <div className="content mr-auto ml-auto">
-              <h1 className="d-4">Edit this file in App.js!</h1>
+              <h1 className="d-4">Start matching now!</h1>
 
               <div className="grid mb-4" >
 
@@ -97,7 +209,21 @@ const App = () => {
 
                 <div className="grid mb-4" >
 
-                  {/* Code goes here... */}
+                  {cardArray.map((card, key) => {
+                    return(
+                      <img
+                        key={key}
+                        src={chooseImage(key)}
+                        data-id={key}
+                        onClick={(event) => {
+                          let cardId = event.target.getAttribute('data-id')
+                          if(!cardsWon.includes(cardId.toString())) {
+                            flipCard(cardId)
+                          }
+                        }}
+                      />
+                    )
+                  })}
 
                 </div>
 
