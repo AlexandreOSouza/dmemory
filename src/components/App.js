@@ -64,7 +64,7 @@ const App = () => {
   const [cardsChosenId, setCardsChosenId] = useState([])
   const [cardsChosen, setCardsChosen] = useState([])
   const [cardsWon, setCardsWon] = useState([])
-  const [cardArray, setCardArray] = useState(CARD_ARRAY.sort(() => 0.5 - Math.random()))
+  const [cardArray, setCardArray] = useState([])
 
   const loadWeb3 = async () => {
     if (window.ethereum) {
@@ -111,6 +111,7 @@ const App = () => {
   useEffect(() => {
     loadWeb3()
     loadBlockchainData()
+    setCardArray(CARD_ARRAY.sort(() => 0.5 - Math.random()))
   }, [])
 
   const chooseImage = (cardId) => {
@@ -128,32 +129,27 @@ const App = () => {
   const flipCard = async (cardId) => {
     const alreadyChosen = cardsChosen.length
 
-    console.log('flip')
-    console.log(cardsChosenId)
-
-
-    setCardsChosen(cardsChosen => [...cardsChosen, cardArray[cardId].name])
-    setCardsChosenId(cardsChosenId => [...cardsChosenId, cardId])
-
-    if (alreadyChosen === 1) {
-      setTimeout(checkForMatch, 1000)
-    }
+    setCardsChosen([...cardsChosen, cardArray[cardId].name]) // name
+    setCardsChosenId([...cardsChosenId, cardId]) // id
   }
+  useEffect((() => {
+    if (cardsChosen.length > 1) {
+      console.log(cardsChosen)
+      console.log(cardsChosenId)
+      checkForMatch()
+    }
+  }), [cardsChosen])
 
   const checkForMatch = async () => {
 
     const optionOneId = cardsChosenId[0]
     const optionTwoId = cardsChosenId[1]
 
-
-    console.log(cardsChosen)
-    console.log(cardsChosenId)
-
     if (optionOneId == optionTwoId) {
       alert('You have clicked the same card!')
     } else if (cardsChosen[0] == cardsChosen[1]) {
       alert('You have found a match!')
-      contract.mint(
+      contract.methods.mint(
         account,
         window.location.origin + CARD_ARRAY[optionOneId].img.toString()
       )
@@ -226,6 +222,24 @@ const App = () => {
                   })}
 
                 </div>
+
+              </div>
+              <div>
+
+              <h5>Tokens Collected:<span id="result">&nbsp;{tokensURIs.length}</span></h5>
+
+              <div className="grid mb-4" >
+
+                { tokensURIs.map((tokenURI, key) => {
+                  return(
+                    <img
+                      key={key}
+                      src={tokenURI}
+                    />
+                  )
+                })}
+
+              </div>
 
               </div>
 
